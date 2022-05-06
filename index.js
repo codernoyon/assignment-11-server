@@ -31,10 +31,18 @@ async function run() {
         });
 
         app.get('/product', async(req, res) => {
-            const query = req.query;
+            const size = parseInt(req.query.size);
+            const query = {};
             const cursor = furnitureCollection.find(query);
-            const products = await cursor.toArray();
-            res.send(products);
+            let products;
+            if(size){
+                products = await cursor.limit(size).toArray();
+            }else{
+                products = await cursor.toArray();
+                
+            }
+            res.send(products); 
+            
         });
 
         app.get('/product/:id', async(req, res) => {
@@ -45,9 +53,12 @@ async function run() {
         })
 
         app.post('/product', async(req, res) => {
-            const newFurniture = req.body;
-            const result = await furnitureCollection.insertOne(newFurniture);
-            res.send(result);
+            const newProduct = req.body;
+            if(!newProduct.name){
+                return res.send({success: false, error: 'Please Provide all data'})
+            }
+            const result = await furnitureCollection.insertOne(newProduct);
+            res.send({success: true, message: 'Succesfully inserted', result});
         });
     }
     finally{
