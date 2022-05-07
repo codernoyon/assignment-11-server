@@ -83,13 +83,13 @@ async function run() {
             const pageNumber = parseInt(req.query.pageNumber);
             const query = {userEmail};
             const cursor = furnitureCollection.find(query);
-            const muItems = await cursor.skip(limit * pageNumber).limit(limit).toArray();
-            const count = await furnitureCollection.estimatedDocumentCount();
-            if (!muItems.length) {
+            const myItems = await cursor.skip(limit * pageNumber).limit(limit).toArray();
+            const count = await myItems.length;
+            if (!myItems.length) {
                 return res.send({ success: false, error: "No product found" })
             }
 
-            res.send({ success: true, data: muItems, count: count })
+            res.send({ success: true, data: myItems, count: count })
         });
     }
     finally {
