@@ -35,7 +35,8 @@ async function run() {
         app.get('/product', async (req, res) => {
             const limit = parseInt(req.query.limit);
             const pageNumber = parseInt(req.query.pageNumber);
-            const cursor = furnitureCollection.find();
+            const query = {};
+            const cursor = furnitureCollection.find(query);
             const products = await cursor.skip(limit * pageNumber).limit(limit).toArray();
             const count = await furnitureCollection.estimatedDocumentCount();
             if (!products.length) {
@@ -78,10 +79,17 @@ async function run() {
         // get my items
         app.get('/myItem', async (req, res) => {
             const userEmail = req.query.email;
-            const query = { userEmail }
+            const limit = parseInt(req.query.limit);
+            const pageNumber = parseInt(req.query.pageNumber);
+            const query = {userEmail};
             const cursor = furnitureCollection.find(query);
-            const myItems = await cursor.toArray();
-            res.send(myItems)
+            const muItems = await cursor.skip(limit * pageNumber).limit(limit).toArray();
+            const count = await furnitureCollection.estimatedDocumentCount();
+            if (!muItems.length) {
+                return res.send({ success: false, error: "No product found" })
+            }
+
+            res.send({ success: true, data: muItems, count: count })
         });
     }
     finally {
