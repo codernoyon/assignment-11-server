@@ -67,7 +67,6 @@ async function run() {
         });
 
         // delete single product
-
         app.delete('/product/:id', async(req, res) => {
             const id = req.params.id;
             const query = {_id: ObjectId(id)};
@@ -75,6 +74,22 @@ async function run() {
             res.send({success: true, message: "Deleted Succesfully", result});
 
         });
+
+        // update product 
+        app.put('/product/:id', async(req, res) => {
+            const id = req.params.id;
+            const updatedQuantity = req.body.quantity;
+            const filter = {_id: ObjectId(id)};
+            const options = {upsert: true};
+            const updatedProduct = {
+                $set: {
+                    quantity: updatedQuantity,
+                }
+            };
+            const result = await furnitureCollection.updateOne(filter, updatedProduct, options);
+            res.send({success: true, message: 'Updated Succesfully', result});
+            console.log(updatedQuantity);
+        })
 
         // get my items
         app.get('/myItem', async (req, res) => {
