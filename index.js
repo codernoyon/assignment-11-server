@@ -17,54 +17,77 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 
 async function run() {
-    
-    try{
+
+    try {
         await client.connect();
-        const furnitureCollection = client.db('arredoWarehouse').collection('furniture');
         const questionCollection = client.db('arredoWarehouse').collection('question');
-        
-        app.get('/questions', async(req, res) => {
+        const furnitureCollection = client.db('arredoWarehouse').collection('furniture');
+
+        // get all questions
+        app.get('/questions', async (req, res) => {
             const query = req.query;
             const cursor = questionCollection.find(query);
             const questions = await cursor.toArray();
             res.send(questions);
         });
 
-        app.get('/product', async(req, res) => {
-            const size = parseInt(req.query.size);
-            const query = {};
-            const cursor = furnitureCollection.find(query);
-            let products;
-            if(size){
-                products = await cursor.limit(size).toArray();
-            }else{
-                products = await cursor.toArray();
-                
+        // get all products
+        app.get('/product', async (req, res) => {
+            const limit = parseInt(req.query.limit);
+            const pageNumber = parseInt(req.query.pageNumber);
+            const cursor = furnitureCollection.find();
+            const products = await cursor.skip(limit * pageNumber).limit(limit).toArray();
+            const count = await furnitureCollection.estimatedDocumentCount();
+            if (!products.length) {
+                return res.send({ success: false, error: "No product found" })
             }
-            res.send(products); 
-            
+
+            res.send({ success: true, data: products, count: count })
+
         });
 
-        app.get('/product/:id', async(req, res) => {
+        // get product full details
+        app.get('/product/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: ObjectId(id)};
+            const query = { _id: ObjectId(id) };
             const product = await furnitureCollection.findOne(query);
             res.send(product);
-        })
+        });
 
-        app.post('/product', async(req, res) => {
+
+        // add new product 
+        app.post('/product', async (req, res) => {
             const newProduct = req.body;
-            if(!newProduct.name){
-                return res.send({success: false, error: 'Please Provide all data'})
+            if (!newProduct.userEmail) {
+                return res.send({ success: false, error: "Please provide use full details" })
             }
             const result = await furnitureCollection.insertOne(newProduct);
-            res.send({success: true, message: 'Succesfully inserted', result});
+            res.send({ success: true, message: "Succesfully Added", result });
+        });
+
+        // delete single product
+
+        app.delete('/product/:id', async(req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const result = await furnitureCollection.deleteOne(query);
+            res.send({success: true, message: "Deleted Succesfully", result});
+
+        });
+
+        // get my items
+        app.get('/myItem', async (req, res) => {
+            const userEmail = req.query.email;
+            const query = { userEmail }
+            const cursor = furnitureCollection.find(query);
+            const myItems = await cursor.toArray();
+            res.send(myItems)
         });
     }
-    finally{
+    finally {
         // await client.close();
     }
-    
+
 
 }
 
