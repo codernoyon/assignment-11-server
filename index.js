@@ -11,6 +11,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if(!authHeader){
+        return res.status(401).send({success: false, message: "Unauthorized access"})
+    }
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if(err){
+            return res.status(403).send({success: false, message: "Forbidden access"})
+        }
+        // console.log('decoded', decoded);
+        req.decoded = decoded;
+        next();
+    })
+
+    
+}
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ee7hj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -50,7 +68,6 @@ async function run() {
         // user auth
         app.post('/login', async(req, res) => {
             const user = req.body;
-            
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
                 expiresIn: '1d'
             });
@@ -85,7 +102,7 @@ async function run() {
         app.post('/product', async (req, res) => {
             const newProduct = req.body;
             if (!newProduct.userEmail) {
-                return res.send({ success: false, error: "Please provide use full details" })
+                return res.send({ success: false, message: "Please provide use full details" })
             }
             const result = await furnitureCollection.insertOne(newProduct);
             res.send({ success: true, message: "Succesfully Added", result });
@@ -116,19 +133,24 @@ async function run() {
         })
 
         // get my items
-        app.get('/myItem', async (req, res) => {
+        app.get('/myItem', verifyJWT, async (req, res) => {
+            const decodedEmail = req.decoded.email;
             const userEmail = req.query.email;
-            const limit = parseInt(req.query.limit);
-            const pageNumber = parseInt(req.query.pageNumber);
-            const query = {userEmail};
-            const cursor = furnitureCollection.find(query);
-            const myItems = await cursor.skip(limit * pageNumber).limit(limit).toArray();
-            const count = await myItems.length;
-            if (!myItems.length) {
-                return res.send({ success: false, error: "No product found" })
+            if(userEmail === decodedEmail){
+                const limit = parseInt(req.query.limit);
+                const pageNumber = parseInt(req.query.pageNumber);
+                const query = {userEmail};
+                const cursor = furnitureCollection.find(query);
+                const myItems = await cursor.skip(limit * pageNumber).limit(limit).toArray();
+                const count = await myItems.length;
+                if (!myItems.length) {
+                    return res.send({ success: false, message: "No product found" })
+                }
+                res.send({ success: true, data: myItems, count: count })
+            }else{
+                res.status(403).send({success: false, message:"Forbidden access"})
             }
-
-            res.send({ success: true, data: myItems, count: count })
+            
         });
     }
     finally {
