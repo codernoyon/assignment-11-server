@@ -22,13 +22,28 @@ async function run() {
         await client.connect();
         const questionCollection = client.db('arredoWarehouse').collection('question');
         const furnitureCollection = client.db('arredoWarehouse').collection('furniture');
+        const popularBlogCollection = client.db('arredoWarehouse').collection('popularBlog');
 
         // get all questions
-        app.get('/questions', async (req, res) => {
+        app.get('/question', async (req, res) => {
             const query = req.query;
             const cursor = questionCollection.find(query);
             const questions = await cursor.toArray();
-            res.send(questions);
+            if(!questions.length){
+                return res.send({success: false, error: "No data found"});
+                }
+            res.send({success: true, data: questions,});
+        });
+
+        // get all popular blogs
+        app.get('/popularBlog', async(req, res) => {
+            const query = req.query;
+            const cursor = popularBlogCollection.find();
+            const popularBlogs = await cursor.toArray();
+            if(!popularBlogs.length){
+            return res.send({success: false, error: "No data found"});
+            }
+            res.send({success: true, data: popularBlogs});
         });
 
         // get all products
@@ -54,7 +69,6 @@ async function run() {
             const product = await furnitureCollection.findOne(query);
             res.send(product);
         });
-
 
         // add new product 
         app.post('/product', async (req, res) => {
@@ -88,7 +102,6 @@ async function run() {
             };
             const result = await furnitureCollection.updateOne(filter, updatedProduct, options);
             res.send({success: true, message: 'Updated Succesfully', result});
-            console.log(updatedQuantity);
         })
 
         // get my items
