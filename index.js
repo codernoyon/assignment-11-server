@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
@@ -44,6 +45,16 @@ async function run() {
             return res.send({success: false, error: "No data found"});
             }
             res.send({success: true, data: popularBlogs});
+        });
+
+        // user auth
+        app.post('/login', async(req, res) => {
+            const user = req.body;
+            
+            const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1d'
+            });
+            res.send({success: true, accessToken: accessToken});
         });
 
         // get all products
