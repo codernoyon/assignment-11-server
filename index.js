@@ -11,6 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// verify JWT Token
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
     if(!authHeader){
@@ -28,7 +29,6 @@ function verifyJWT(req, res, next) {
 
     
 }
-
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ee7hj.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -69,7 +69,7 @@ async function run() {
         app.post('/login', async(req, res) => {
             const user = req.body;
             const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-                expiresIn: '1d'
+                expiresIn: '1h'
             });
             res.send({success: true, accessToken: accessToken});
         });
