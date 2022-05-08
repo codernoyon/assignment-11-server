@@ -42,6 +42,7 @@ async function run() {
         const questionCollection = client.db('arredoWarehouse').collection('question');
         const furnitureCollection = client.db('arredoWarehouse').collection('furniture');
         const popularBlogCollection = client.db('arredoWarehouse').collection('popularBlog');
+        const testimonialCollection = client.db('arredoWarehouse').collection('testimonial');
 
         // get all questions
         app.get('/question', async (req, res) => {
@@ -54,10 +55,19 @@ async function run() {
             res.send({success: true, data: questions,});
         });
 
+        // get all testimonias
+        app.get('/testimonial', async(req, res) => {
+            const query = req.query;
+            const cursor = testimonialCollection.find(query);
+            const testimonials = await cursor.toArray();
+            res.send({success: true, data: testimonials});
+
+        })
+
         // get all popular blogs
         app.get('/popularBlog', async(req, res) => {
             const query = req.query;
-            const cursor = popularBlogCollection.find();
+            const cursor = popularBlogCollection.find(query);
             const popularBlogs = await cursor.toArray();
             if(!popularBlogs.length){
             return res.send({success: false, error: "No data found"});

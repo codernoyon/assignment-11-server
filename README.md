@@ -2,22 +2,22 @@
 
 ### Live Websit link
 https://arredo-warehouse.web.app/
----
+
 
 ### Live server link
 https://salty-refuge-04381.herokuapp.com
----
 
 
 
 ## Used Technologies
--
--
--
+- Express Js 
+- Json Web Token (JWT)  [For user auth access]
+- Dotenv (For Environment variable)
+- MongoDB (As a database)
+- Cors
 
 ---
 
-<img src=""/>
 
 
 ## ☕ Connect with me!
